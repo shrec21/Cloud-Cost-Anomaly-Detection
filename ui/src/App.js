@@ -15,9 +15,10 @@ function App() {
         setError(null);
 
         // Fetch cost data and anomalies in parallel
+        const API_BASE = 'https://cloud-cost-anomaly-api.azurewebsites.net';
         const [costsResponse, anomaliesResponse] = await Promise.all([
-          fetch('/api/costs'),
-          fetch('/api/anomalies')
+          fetch(`${API_BASE}/api/costs`),
+          fetch(`${API_BASE}/api/anomalies`)
         ]);
 
         if (!costsResponse.ok || !anomaliesResponse.ok) {
@@ -56,7 +57,7 @@ function App() {
 
       {error && (
         <div className="error">
-          Error: {error}. Make sure the API is running on port 7071.
+          Error: {error}. Please try again later.
         </div>
       )}
 
