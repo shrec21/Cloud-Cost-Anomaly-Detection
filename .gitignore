@@ -1,0 +1,19 @@
+# Local settings (secrets, env)
+api/local.settings.json
+
+# Python
+api/.python_packages/
+api/__pycache__/
+api/.venv/
+api/venv/
+
+# React / Node
+ui/node_modules/
+ui/build/
+ui/.env.local
+ui/.env.*.local
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
