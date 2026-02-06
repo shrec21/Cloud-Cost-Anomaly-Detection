@@ -98,6 +98,36 @@ COSMOS_DB=costdb
 
 Without these, the API runs in mock mode with generated data.
 
+## Deployment to Azure
+
+### Prerequisites
+
+- Azure CLI, Azure Functions Core Tools, Azure account
+
+### Deploy
+
+```bash
+# Login and create resources
+az login
+az group create --name cloud-cost-rg --location eastus
+az storage account create --name cloudcoststorage123 --location eastus --resource-group cloud-cost-rg --sku Standard_LRS
+az functionapp create --resource-group cloud-cost-rg --consumption-plan-location eastus --runtime python --runtime-version 3.11 --functions-version 4 --name cloud-cost-anomaly-api --storage-account cloudcoststorage123 --os-type Linux
+
+# Deploy API
+cd api && func azure functionapp publish cloud-cost-anomaly-api
+
+# Deploy UI (update API_BASE in App.js first)
+cd ui && npm run build
+az storage blob service-properties update --account-name cloudcoststorage123 --static-website --index-document index.html
+az storage blob upload-batch --account-name cloudcoststorage123 --destination '$web' --source build --overwrite
+```
+
+### Cleanup
+
+```bash
+az group delete --name cloud-cost-rg --yes
+```
+
 ## License
 
 MIT
