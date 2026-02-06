@@ -122,12 +122,6 @@ az storage blob service-properties update --account-name cloudcoststorage123 --s
 az storage blob upload-batch --account-name cloudcoststorage123 --destination '$web' --source build --overwrite
 ```
 
-### Cleanup
-
-```bash
-az group delete --name cloud-cost-rg --yes
-```
-
 ## License
 
 MIT
