@@ -18,7 +18,7 @@ def generate_mock_costs(days: int = 30) -> list[dict]:
 
     # Base costs for each service (will vary slightly each day)
     base_costs = {
-        "compute": 500.0,
+        "compute": 600.0,
         "storage": 300.0,
         "network": 200.0,
         "database": 250.0
