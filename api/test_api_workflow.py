@@ -60,7 +60,7 @@ class TestDetectAnomalies(unittest.TestCase):
             {"date": "2024-01-01", "total_cost": 1000.0, "services": {"compute": 1000.0}},
             {"date": "2024-01-02", "total_cost": 1050.0, "services": {"compute": 1050.0}},
             {"date": "2024-01-03", "total_cost": 980.0, "services": {"compute": 980.0}},
-            {"date": "2024-01-04", "total_cost": 1020.0, "services": {"compute": 1020.0}},
+            {"date": "2024-01-04", "total_cost": 1070.0, "services": {"compute": 1020.0}},
             {"date": "2024-01-05", "total_cost": 2500.0, "services": {"compute": 2500.0}},  # Spike!
             {"date": "2024-01-06", "total_cost": 1000.0, "services": {"compute": 1000.0}},
         ]
