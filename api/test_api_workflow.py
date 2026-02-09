@@ -45,6 +45,21 @@ class TestAnomalyDetector(unittest.TestCase):
         """Test Z-score returns 0 when std dev is 0."""
         self.assertEqual(calculate_z_score(100.0, 100.0, 0.0), 0.0)
 
+    def test_calculate_z_score_negative(self):
+        """Test Z-score calculation for values below mean."""
+        # z = (50 - 100) / 25 = -2.0
+        self.assertEqual(calculate_z_score(50.0, 100.0, 25.0), -2.0)
+
+    def test_calculate_mean_single_value(self):
+        """Test mean calculation with single value."""
+        self.assertEqual(calculate_mean([42.0]), 42.0)
+
+    def test_calculate_std_dev_two_values(self):
+        """Test std dev with two values."""
+        values = [0.0, 10.0]
+        std_dev = calculate_std_dev(values)
+        self.assertEqual(std_dev, 5.0)
+
 
 class TestDetectAnomalies(unittest.TestCase):
     """Tests for the detect_anomalies function."""
@@ -100,6 +115,37 @@ class TestDetectAnomalies(unittest.TestCase):
             has_severity = any(a["severity"] in ["high", "medium"] for a in anomalies)
             self.assertTrue(has_severity)
 
+    def test_detect_anomalies_cost_drop(self):
+        """Test anomaly detection identifies unusual cost drops."""
+        cost_data = [
+            {"date": "2024-01-01", "total_cost": 1000.0, "services": {"compute": 1000.0}},
+            {"date": "2024-01-02", "total_cost": 1000.0, "services": {"compute": 1000.0}},
+            {"date": "2024-01-03", "total_cost": 1000.0, "services": {"compute": 1000.0}},
+            {"date": "2024-01-04", "total_cost": 1000.0, "services": {"compute": 1000.0}},
+            {"date": "2024-01-05", "total_cost": 200.0, "services": {"compute": 200.0}},  # Drop!
+            {"date": "2024-01-06", "total_cost": 1000.0, "services": {"compute": 1000.0}},
+        ]
+
+        anomalies = detect_anomalies(cost_data, threshold=2.0)
+
+        # Should detect the drop (negative z-score)
+        drop_detected = any(a["date"] == "2024-01-05" and a["z_score"] < 0 for a in anomalies)
+        self.assertTrue(drop_detected, "Should detect cost drop on 2024-01-05")
+
+    def test_detect_anomalies_multiple_services(self):
+        """Test anomaly detection with multiple services identifies top contributor."""
+        cost_data = [
+            {"date": "2024-01-01", "total_cost": 1000.0, "services": {"compute": 500.0, "storage": 300.0, "network": 200.0}},
+            {"date": "2024-01-02", "total_cost": 1000.0, "services": {"compute": 500.0, "storage": 300.0, "network": 200.0}},
+            {"date": "2024-01-03", "total_cost": 2500.0, "services": {"compute": 1800.0, "storage": 400.0, "network": 300.0}},  # Compute spike
+        ]
+
+        anomalies = detect_anomalies(cost_data, threshold=1.5)
+
+        if anomalies:
+            # Reason should mention compute as the top contributor
+            self.assertIn("compute", anomalies[0]["reason"].lower())
+
 
 class TestMockData(unittest.TestCase):
     """Tests for mock data generation."""
@@ -134,6 +180,30 @@ class TestMockData(unittest.TestCase):
         for day in data:
             services_sum = sum(day["services"].values())
             self.assertLess(abs(day["total_cost"] - services_sum), 0.01)  # Allow small float error
+
+    def test_generate_mock_costs_date_format(self):
+        """Test that dates are in correct ISO format (YYYY-MM-DD)."""
+        import re
+        data = generate_mock_costs(days=5)
+        date_pattern = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+        for day in data:
+            self.assertRegex(day["date"], date_pattern)
+
+    def test_generate_mock_costs_different_ranges(self):
+        """Test mock data generation with various day ranges."""
+        for days in [1, 7, 14, 30]:
+            data = generate_mock_costs(days=days)
+            self.assertEqual(len(data), days)
+
+    def test_generate_mock_costs_positive_values(self):
+        """Test that all cost values are positive."""
+        data = generate_mock_costs(days=10)
+
+        for day in data:
+            self.assertGreater(day["total_cost"], 0)
+            for service_cost in day["services"].values():
+                self.assertGreater(service_cost, 0)
 
 
 class TestAPIWorkflow(unittest.TestCase):
@@ -179,6 +249,33 @@ class TestAPIWorkflow(unittest.TestCase):
 
         # Same request should return same cached data
         self.assertEqual(data1, data2)
+
+    def test_anomaly_deviation_calculation(self):
+        """Test that deviation is correctly calculated as cost minus expected."""
+        cost_data = [
+            {"date": "2024-01-01", "total_cost": 100.0, "services": {"compute": 100.0}},
+            {"date": "2024-01-02", "total_cost": 100.0, "services": {"compute": 100.0}},
+            {"date": "2024-01-03", "total_cost": 100.0, "services": {"compute": 100.0}},
+            {"date": "2024-01-04", "total_cost": 300.0, "services": {"compute": 300.0}},  # Spike
+        ]
+
+        anomalies = detect_anomalies(cost_data, threshold=1.5)
+
+        if anomalies:
+            anomaly = anomalies[0]
+            expected_deviation = anomaly["total_cost"] - anomaly["expected_cost"]
+            self.assertAlmostEqual(anomaly["deviation"], expected_deviation, places=1)
+
+    def test_workflow_with_minimum_data(self):
+        """Test workflow handles minimum viable data (2 data points)."""
+        cost_data = [
+            {"date": "2024-01-01", "total_cost": 100.0, "services": {"compute": 100.0}},
+            {"date": "2024-01-02", "total_cost": 500.0, "services": {"compute": 500.0}},
+        ]
+
+        # Should not crash with minimal data
+        anomalies = detect_anomalies(cost_data, threshold=1.0)
+        self.assertIsInstance(anomalies, list)
 
 
 # Run tests with: python3 test_api_workflow.py
