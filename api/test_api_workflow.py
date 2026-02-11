@@ -3,7 +3,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Import modules under test
 from anomaly_detector import calculate_mean, calculate_std_dev, calculate_z_score, detect_anomalies
 from mock_data import generate_mock_costs, get_mock_costs
 
@@ -25,7 +24,6 @@ class TestAnomalyDetector(unittest.TestCase):
         values = [10.0, 20.0, 30.0, 40.0, 50.0]
         mean = calculate_mean(values)
         std_dev = calculate_std_dev(values, mean)
-        # Expected std dev is ~14.14
         self.assertTrue(14.0 < std_dev < 15.0)
 
     def test_calculate_std_dev_empty(self):
@@ -38,7 +36,6 @@ class TestAnomalyDetector(unittest.TestCase):
 
     def test_calculate_z_score(self):
         """Test Z-score calculation."""
-        # z = (value - mean) / std_dev = (150 - 100) / 25 = 2.0
         self.assertEqual(calculate_z_score(150.0, 100.0, 25.0), 2.0)
 
     def test_calculate_z_score_zero_std_dev(self):
@@ -47,7 +44,6 @@ class TestAnomalyDetector(unittest.TestCase):
 
     def test_calculate_z_score_negative(self):
         """Test Z-score calculation for values below mean."""
-        # z = (50 - 100) / 25 = -2.0
         self.assertEqual(calculate_z_score(50.0, 100.0, 25.0), -2.0)
 
     def test_calculate_mean_single_value(self):
@@ -70,19 +66,16 @@ class TestDetectAnomalies(unittest.TestCase):
 
     def test_detect_anomalies_with_spike(self):
         """Test anomaly detection identifies cost spikes."""
-        # Create mock data with a clear spike
         cost_data = [
             {"date": "2024-01-01", "total_cost": 1000.0, "services": {"compute": 1000.0}},
             {"date": "2024-01-02", "total_cost": 1050.0, "services": {"compute": 1050.0}},
             {"date": "2024-01-03", "total_cost": 980.0, "services": {"compute": 980.0}},
             {"date": "2024-01-04", "total_cost": 1070.0, "services": {"compute": 1020.0}},
-            {"date": "2024-01-05", "total_cost": 2500.0, "services": {"compute": 2500.0}},  # Spike!
+            {"date": "2024-01-05", "total_cost": 2500.0, "services": {"compute": 2500.0}},
             {"date": "2024-01-06", "total_cost": 1000.0, "services": {"compute": 1000.0}},
         ]
 
         anomalies = detect_anomalies(cost_data, threshold=2.0)
-
-        # Should detect the spike on 2024-01-05
         self.assertGreaterEqual(len(anomalies), 1)
         spike_detected = any(a["date"] == "2024-01-05" for a in anomalies)
         self.assertTrue(spike_detected, "Should detect spike on 2024-01-05")
