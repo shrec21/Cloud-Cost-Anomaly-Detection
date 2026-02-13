@@ -128,7 +128,7 @@ class TestDetectAnomalies(unittest.TestCase):
     def test_detect_anomalies_multiple_services(self):
         """Test anomaly detection with multiple services identifies top contributor."""
         cost_data = [
-            {"date": "2024-01-01", "total_cost": 1000.0, "services": {"compute": 500.0, "storage": 300.0, "network": 200.0}},
+            {"date": "2024-01-01", "total_cost": 1000.0, "services": {"compute": 500.0, "storage": 500.0, "network": 200.0}},
             {"date": "2024-01-02", "total_cost": 1000.0, "services": {"compute": 500.0, "storage": 300.0, "network": 200.0}},
             {"date": "2024-01-03", "total_cost": 2500.0, "services": {"compute": 1800.0, "storage": 400.0, "network": 300.0}},  # Compute spike
         ]
