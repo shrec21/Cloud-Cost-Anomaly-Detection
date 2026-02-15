@@ -14,7 +14,7 @@ def generate_mock_costs(days: int = 30) -> list[dict]:
         List of daily cost records with service breakdown.
     """
     data = []
-    base_date = datetime.now() - timedelta(days=days)
+    base_date = datetime.now() - timedelta(days=days) 
 
     # Base costs for each service (will vary slightly each day)
     base_costs = {
